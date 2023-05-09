@@ -23,7 +23,7 @@ def expand_pandas(max_rows=100, max_cols=500, width=None, max_info_cols=None):
     
 
 model_config={"max_len" :512, 
-              "batch_size":5,
+              "batch_size":10,
              "warmup_ratio": 0.1,
              "num_epochs": 200,
              "max_grad_norm": 1,
@@ -52,4 +52,4 @@ label_cols=['국내선',
 
 num_classes=8
 
-weight_path="./weights/weight_01.pt"
+weight_path="./weights"
