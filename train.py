@@ -6,6 +6,7 @@ from torch import nn
 from transformers import get_linear_schedule_with_warmup, AdamW
 import numpy as np
 from metrics_for_multilabel import calculate_metrics, colwise_accuracy
+import pandas as pd
 
 DATA_PATH=config.DATA_PATH
 model_config=config.model_config
@@ -13,11 +14,11 @@ model_config=config.model_config
 class train():
     def __init__(self, device) -> None:
         # 데이터셋
-        self.train_dataloader, self.test_dataloader = make_dataloader()
+        self.train_dataloader, self.test_dataloader = make_dataloader(pd.read_csv(DATA_PATH, index_col=0))
         self.device = device
 
         # KoBERT 라이브러리에서 bertmodel을 호출함. .to() 메서드는 모델 전체를 GPU 디바이스에 옮겨 줌.
-        self.model = BERTClassifier(num_classes=config.num_calsses, dr_rate = model_config["dr_rate"]).to(self.device)
+        self.model = BERTClassifier(num_classes=config.num_classes, dr_rate = model_config["dr_rate"]).to(self.device)
 
         # 옵티마이저와 스케쥴 준비 (linear warmup과 decay)
         no_decay = ['bias', 'LayerNorm.weight']
@@ -52,7 +53,7 @@ class train():
 
 
 
-    def train_model(self, batch_size, patience, n_epochs,path):
+    def train_model(self, batch_size, patience, n_epochs, path):
         
         # to track the training loss as the model trains
         train_losses = []
@@ -83,6 +84,8 @@ class train():
                 label = label.float().to(self.device)
 
                 out= self.model(token_ids, valid_length, segment_ids)#.squeeze(1)
+                print(f'out:\n{out}')
+                print(f'label:\n{label}')
                 
                 loss = self.loss_fn(out, label)
 
@@ -187,11 +190,11 @@ class train():
     def main(self):
         # early stopping patience; how long to wait after last time validation loss improved.
         patience = 10
-        model, train_loss, valid_loss = self.train_model(model, 
+        model, train_loss, valid_loss = self.train_model(
                                                     model_config["batch_size"],
                                                     patience, 
                                                     model_config["num_epochs"], 
-                                                    path=config.weight_path)
+                                                    path=config.weight_path) # batch_size, patience, n_epochs, path
 
 if __name__ == '__main__':
     device = "cuda" if torch.cuda.is_available() else "cpu" 

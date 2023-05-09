@@ -3,7 +3,7 @@
 import os
 
 
-DATA_PATH="../data/voc_data.xlsx"
+DATA_PATH="./Data/dataset.csv"
 
 
 
@@ -50,6 +50,6 @@ label_cols=['국내선',
  '재발행']
 
 
-num_class=8
+num_classes=8
 
 weight_path="./weights/weight_01.pt"

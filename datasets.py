@@ -9,7 +9,7 @@ model_config=config.model_config
 
 def make_dataloader(dataset):
     train_input, test_input = train_test_split(dataset, test_size = 0.1, random_state = 42)
-
+    #print(train_input)
     train=train_input.copy()
     test=test_input.copy()
 

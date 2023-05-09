@@ -18,7 +18,7 @@ from tqdm import tqdm, tqdm_notebook
 
 
 
-from KoBERT.kobert.utils import get_tokenizer
+from KoBERT.kobert.utils.utils import get_tokenizer
 from KoBERT.kobert.pytorch_kobert import get_pytorch_kobert_model
 
 from transformers import AdamW
@@ -42,6 +42,9 @@ print(f'device using: {device}')
 
 model_config=config.model_config
 
+def asdf(x):
+    return np.array(ast.literal_eval(x))
+    
 
 class Data_for_BERT(Dataset):
     def __init__(self, dataset, max_len, pad, pair, x_cols, label_cols):
@@ -53,10 +56,12 @@ class Data_for_BERT(Dataset):
         # pair 인자는 문장으로 변환할지, 문장 쌍으로 변환할지.
         
         transform = nlp.data.BERTSentenceTransform(tok, max_seq_length = max_len, pad=pad, pair=pair)
-        self.sentences = [transform([txt]) for txt in dataset[x_cols].text]
+        # for txt in dataset[x_cols]:
+        #     print(txt)
+        self.sentences = [transform(str(txt)) for txt in dataset[x_cols]]
         # self.sentences_Customer = [transform([txt]) for txt in dataset.Customer]
         # self.labels = [np.int32(i) for i in dataset.label]
-        self.labels=dataset[label_cols].apply(ast.literal_eval)
+        self.labels= dataset[label_cols].apply(asdf)
         
 
         # ohe = OneHotEncoder().fit(pd.Series(self.labels).values.reshape(-1,1))
