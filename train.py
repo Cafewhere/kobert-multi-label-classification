@@ -92,9 +92,9 @@ class train():
 
             self.model.eval()
             valid_loss = 0
+            valid_accuracy = 0
             with torch.no_grad():
                 cidx = np.random.randint(len(self.test_dataloader))
-                valid_accuracy = 0
                 for batch_id, (token_ids, valid_length, segment_ids, test_label) in tqdm(enumerate(self.test_dataloader), total = len(self.test_dataloader)):
                     
                     token_ids = token_ids.long().to(self.device)
@@ -115,10 +115,13 @@ class train():
                     # print(f'test_pred:\n{test_pred}')
                     # print(f'test_real:\n{test_real}')
                     valid_accuracy += colwise_accuracy(test_real, test_pred)
-                print(f"colwise_mean_accuracy: {valid_accuracy/len(self.test_dataloader)}")
+                
             valid_loss = valid_loss / len(self.test_dataloader)
+            valid_accuracy = valid_accuracy / len(self.test_dataloader)
             writer.add_scalar("loss(valid)", valid_loss, epoch) # tensorboard
+            writer.add_scalar("accuracy(valid)", valid_accuracy, epoch) # tensorboard
             print(f"valid loss: {valid_loss}")
+            print(f"colwise_mean_accuracy: {valid_accuracy}")
 
             
 
