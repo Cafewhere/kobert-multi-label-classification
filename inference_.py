@@ -101,7 +101,14 @@ class load_model:
         self.tok = nlp.data.BERTSPTokenizer(self.tokenizer, self.vocab, lower = False)
         self.transform = nlp.data.BERTSentenceTransform(self.tok, max_seq_length = config.model_config["max_len"], pad=True, pair=False)
         
+        self.data=pd.read_csv('./Data/review_data.csv')
+
+    def process_for_inference(self, num_of_text):
+        text_input=self.data.iloc[num_of_text]['review']
+        return text_input
+
     
+
     def get_model(self):
         # KoBERT 라이브러리에서 bertmodel을 호출함. .to() 메서드는 모델 전체를 GPU 디바이스에 옮겨 줌.
         self.model = BERTClassifier(self.bertmodel, num_classes=num_class, dr_rate = config.model_config["dr_rate"]).to(self.device)
@@ -111,9 +118,10 @@ class load_model:
         
         return self.model
     
-    def get_prediction_from_txt(self, input_text):
+    def get_prediction_from_txt(self, num_of_text):
         device=self.device
         
+        input_text = self.process_for_inference(num_of_text)
         sentences = self.transform([input_text])
         
         get_pred = self.model(torch.tensor(sentences[0]).long().unsqueeze(0).to(device),torch.tensor(sentences[1]).unsqueeze(0),torch.tensor(sentences[2]).to(device))
@@ -123,6 +131,32 @@ class load_model:
         
         result=f"분석 결과, 예상 태그는 {[config.label_cols[i] for i in get_pred]} 입니다."
         return result
+
+    def make_prediction_from_idx(self, start_idx, end_idx=-1):
+        if end_idx == -1:
+            end_idx = start_idx+1
+
+        device=self.device
+        
+        for num_of_text in range(start_idx, end_idx):
+            
+            input_text = self.process_for_inference(num_of_text)
+            print(f'\n[{num_of_text}] : {input_text}')
+            sentences = self.transform([input_text])
+            
+            get_pred = self.model(torch.tensor(sentences[0]).long().unsqueeze(0).to(device),torch.tensor(sentences[1]).unsqueeze(0),torch.tensor(sentences[2]).to(device))
+            #print(get_pred)
+            get_pred = (torch.sigmoid(get_pred).squeeze() >= 0.5).int()
+            #print(get_pred)
+            pred = (get_pred >= 0.5).nonzero(as_tuple=True)[0]
+        
+            result=f" => 분석 결과, 예상 태그는 {[config.label_cols[i] for i in pred]} 입니다."
+            print(result)
+        
+        
+        
+        
+        
         
 
 if __name__ == '__main__':
@@ -133,16 +167,6 @@ if __name__ == '__main__':
     bert.eval()
 
     
-
-    data=pd.read_csv('./Data/review_data.csv')
-
-    def process_for_inference(num_of_text):
-        text_input=data.iloc[num_of_text]['review']
-        return text_input
-
-
-    
-    Input=process_for_inference(0)
-    
-    print(model.get_prediction_from_txt(Input))
+    #print(model.get_prediction_from_txt(0))
+    model.make_prediction_from_idx(20, 25)
         
