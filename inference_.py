@@ -9,7 +9,6 @@ import re
 
 import config
 from config import expand_pandas
-from preprocess import preprocess
 
 # KoBERT 모델
 import torch
@@ -116,16 +115,13 @@ class load_model:
         device=self.device
         
         sentences = self.transform([input_text])
-        #true_values=np.nonzero(input_text_label)[0].tolist()
-        #num_of_true=round(len(true_values)*1.5)
         
-        get_pred=self.model(torch.tensor(sentences[0]).long().unsqueeze(0).to(device),torch.tensor(sentences[1]).unsqueeze(0),torch.tensor(sentences[2]).to(device))
-        #get_pred=get_pred.topk(k=num_of_true)[1]
-
-        pred=np.array(get_pred.to("cpu").detach().numpy()[0], dtype=float)
-        pred=list(map(int,pred))
-        result=f"분석 결과, 예상 태그는 {[config.label_cols[i] for i in pred]} 입니다."
-        #true_label=f"실제 태그는 {[config.label_cols[i] for i in true_values]} 입니다."
+        get_pred = self.model(torch.tensor(sentences[0]).long().unsqueeze(0).to(device),torch.tensor(sentences[1]).unsqueeze(0),torch.tensor(sentences[2]).to(device))
+        get_pred = torch.sigmoid(get_pred).squeeze()
+        
+        get_pred = (get_pred >= 0.5).nonzero(as_tuple=True)[0]
+        
+        result=f"분석 결과, 예상 태그는 {[config.label_cols[i] for i in get_pred]} 입니다."
         return result
         
 
